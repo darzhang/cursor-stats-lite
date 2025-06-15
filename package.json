@@ -3,6 +3,7 @@
   "displayName": "Cursor Stats Lite (based on Cursor Stats by Dwtexe)",
   "description": "Lightweight Cursor usage monitoring (simplified version of Cursor Stats by Dwtexe)",
   "version": "1.0.0",
+  "publisher": "darzhang",
   "engines": {
     "vscode": "^1.96.0"
   },
