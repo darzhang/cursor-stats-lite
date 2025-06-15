@@ -1,0 +1,92 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "18"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build extension
+        run: npm run build
+
+      - name: Get version from tag
+        id: get_version
+        run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: Release v${{ steps.get_version.outputs.VERSION }}
+          body: |
+            ## Cursor Stats Lite v${{ steps.get_version.outputs.VERSION }}
+
+            **Based on [Cursor Stats](https://github.com/Dwtexe/cursor-stats) by Dwtexe**
+
+            A simplified version of the popular Cursor Stats extension, focusing on core functionality for lightweight usage monitoring.
+
+            ### Installation
+            1. Download the `cursor-stats-lite.vsix` file below
+            2. Open Cursor/VS Code
+            3. Press `Ctrl+Shift+P` (or `Cmd+Shift+P` on Mac)
+            4. Type "Extensions: Install from VSIX"
+            5. Select the downloaded `.vsix` file
+
+            ### Features
+            - Real-time Cursor usage monitoring in status bar
+            - Configurable auto-refresh interval
+            - Color-coded usage indicators  
+            - Simple hover tooltip with usage details
+
+            ### Differences from Original Cursor Stats
+            This lite version removes advanced features to focus on simplicity:
+            - No internationalization (multi-language support)
+            - No multi-currency support
+            - No progress bar visualizations
+            - No advanced notifications
+            - No team usage tracking
+            - No diagnostic reporting
+            - Simplified configuration options
+
+            For the full-featured version, visit: https://github.com/Dwtexe/cursor-stats
+
+            ### Attribution
+            - **Original Project:** [Cursor Stats](https://github.com/Dwtexe/cursor-stats)
+            - **Original Author:** Dwtexe
+            - **This Version:** Simplified derivative by Darren Zhang
+            - **License:** GNU General Public License v3.0 (same as original)
+
+            ---
+
+            **Note**: This extension is a derivative work licensed under GPL 3.0, maintaining compliance with the original work's licensing requirements.
+          draft: false
+          prerelease: false
+
+      - name: Upload Release Asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./cursor-stats-lite.vsix
+          asset_name: cursor-stats-lite.vsix
+          asset_content_type: application/zip

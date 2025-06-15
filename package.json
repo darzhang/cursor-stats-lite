@@ -1,0 +1,85 @@
+{
+  "name": "cursor-stats-lite",
+  "displayName": "Cursor Stats Lite (based on Cursor Stats by Dwtexe)",
+  "description": "Lightweight Cursor usage monitoring (simplified version of Cursor Stats by Dwtexe)",
+  "version": "1.0.0",
+  "engines": {
+    "vscode": "^1.96.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/darzhang/cursor-stats-lite"
+  },
+  "bugs": {
+    "url": "https://github.com/darzhang/cursor-stats-lite/issues"
+  },
+  "homepage": "https://github.com/darzhang/cursor-stats-lite#readme",
+  "author": {
+    "name": "Darren Zhang"
+  },
+  "contributors": [
+    {
+      "name": "Dwtexe",
+      "url": "https://github.com/Dwtexe",
+      "role": "Original Author of Cursor Stats"
+    }
+  ],
+  "license": "GPL-3.0",
+  "keywords": [
+    "cursor",
+    "cursor-stats",
+    "based-on-cursor-stats",
+    "usage-monitoring",
+    "lite",
+    "simplified"
+  ],
+  "scripts": {
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "package": "npx @vscode/vsce package --out cursor-stats-lite.vsix",
+    "install-local": "cursor --install-extension cursor-stats-lite.vsix",
+    "clean": "rm -rf out/ *.vsix",
+    "build": "npm run clean && npm run compile && npm run package",
+    "setup-and-install": "npm install && npm run build && npm run install-local",
+    "dev-install": "npm run build && npm run install-local"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "cursor-usage.refresh",
+        "title": "Refresh Cursor Usage",
+        "icon": "$(sync)"
+      }
+    ],
+    "configuration": {
+      "title": "Cursor Stats Lite",
+      "properties": {
+        "cursorStatsLite.refreshInterval": {
+          "type": "number",
+          "default": 30,
+          "minimum": 5,
+          "maximum": 600,
+          "description": "Auto-refresh interval in seconds (5-600 seconds)"
+        }
+      }
+    }
+  },
+  "dependencies": {
+    "axios": "^1.9.0",
+    "jsonwebtoken": "^9.0.2",
+    "sql.js": "^1.13.0"
+  },
+  "devDependencies": {
+    "@types/jsonwebtoken": "^9.0.9",
+    "@types/sql.js": "^1.4.9",
+    "@types/vscode": "^1.96.0",
+    "typescript": "^5.8.3"
+  }
+}
