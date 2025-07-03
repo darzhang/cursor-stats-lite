@@ -35,31 +35,43 @@ export class StatusBarManager {
   public updateDisplay(data: UsageData) {
     const { premiumRequests, usageBasedPricing } = data;
 
-    // Calculate premium usage percentage
-    const premiumPercent = Math.round(
-      (premiumRequests.current / premiumRequests.limit) * 100
-    );
-
-    // Build status text
-    let statusText = `$(graph) ${premiumRequests.current}/${premiumRequests.limit}`;
+    // Determine plan type
+    const isLegacyPlan = premiumRequests.limit !== null && premiumRequests.limit !== undefined;
+    
+    // Build status text based on plan type
+    let statusText: string;
+    let premiumPercent: number;
+    
+    if (isLegacyPlan) {
+      // Legacy plan: show current/limit (Legacy)
+      premiumPercent = Math.round((premiumRequests.current / premiumRequests.limit) * 100);
+      statusText = `$(graph) ${premiumRequests.current}/${premiumRequests.limit} (Legacy)`;
+    } else {
+      // New plan: show current only (Rate Limit)
+      premiumPercent = 0; // No percentage for unlimited plans
+      statusText = `$(graph) ${premiumRequests.current} (Rate Limit)`;
+    }
 
     // Add usage-based cost if enabled
     if (usageBasedPricing.isEnabled && usageBasedPricing.totalCost > 0) {
-      statusText += ` $(credit-card) $${usageBasedPricing.totalCost.toFixed(
-        2
-      )}`;
+      statusText += ` $(credit-card) $${usageBasedPricing.totalCost.toFixed(2)}`;
     }
 
     this.statusBarItem.text = statusText;
 
-    // Set color based on usage
-    if (premiumPercent >= 90) {
-      this.statusBarItem.color = "#FF3333";
-    } else if (premiumPercent >= 75) {
-      this.statusBarItem.color = "#FF8800";
-    } else if (premiumPercent >= 50) {
-      this.statusBarItem.color = "#FFCC00";
+    // Set color based on usage (only for legacy plans with limits)
+    if (isLegacyPlan) {
+      if (premiumPercent >= 90) {
+        this.statusBarItem.color = "#FF3333";
+      } else if (premiumPercent >= 75) {
+        this.statusBarItem.color = "#FF8800";
+      } else if (premiumPercent >= 50) {
+        this.statusBarItem.color = "#FFCC00";
+      } else {
+        this.statusBarItem.color = undefined;
+      }
     } else {
+      // New plan users don't have usage limits, so no color indication needed
       this.statusBarItem.color = undefined;
     }
 
@@ -71,21 +83,37 @@ export class StatusBarManager {
   }
 
   private createTooltip(data: UsageData): vscode.MarkdownString {
-    const { premiumRequests } = data;
+    const { premiumRequests, usageBasedPricing } = data;
     const tooltip = new vscode.MarkdownString();
 
     // Get current refresh interval from configuration
     const config = vscode.workspace.getConfiguration("cursorStatsLite");
     const refreshInterval = config.get<number>("refreshInterval", 30);
 
+    // Determine plan type
+    const isLegacyPlan = premiumRequests.limit !== null && premiumRequests.limit !== undefined;
+
     tooltip.appendMarkdown("## Cursor Usage\n\n");
 
-    // Premium requests section
-    const premiumPercent = Math.round(
-      (premiumRequests.current / premiumRequests.limit) * 100
-    );
+    // Plan type section
+    const planType = isLegacyPlan ? "Request Limit (Legacy)" : "New Plan (Rate Limit)";
+    tooltip.appendMarkdown(`**Plan Type:** ${planType}\n\n`);
+
+    // Premium requests section - different display based on plan type
+    if (isLegacyPlan) {
+      const premiumPercent = Math.round((premiumRequests.current / premiumRequests.limit) * 100);
+      tooltip.appendMarkdown(
+        `**Premium Requests:** ${premiumRequests.current}/${premiumRequests.limit} (${premiumPercent}%)\n\n`
+      );
+    } else {
+      tooltip.appendMarkdown(
+        `**Premium Requests:** ${premiumRequests.current} (unlimited)\n\n`
+      );
+    }
+
+    // Usage-based pricing section
     tooltip.appendMarkdown(
-      `**Premium Requests:** ${premiumRequests.current}/${premiumRequests.limit} (${premiumPercent}%)\n\n`
+      `**Usage-Based Pricing:** ${usageBasedPricing.isEnabled ? 'Enabled' : 'Disabled'}\n\n`
     );
 
     // Refresh interval information
