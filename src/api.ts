@@ -37,7 +37,12 @@ export async function checkTeamMembership(
     );
 
     const isTeamMember = response.data?.teams?.length > 0;
-    const teamId = isTeamMember ? response.data.teams[0].id : undefined;
+
+    // Find active subscription from list of teams
+    const activeSubscription = response.data.teams.find(
+      (team: any) => team.subscriptionStatus === "active"
+    );
+    const teamId = isTeamMember ? activeSubscription?.id : undefined;
 
     return {
       isTeamMember,
